@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SkillLens — Job Seeker Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#00040f;--bg2:#00081a;--sidebar:#030918;
+  --blue:#0052ff;--blue2:#3b82f6;--blue-glow:rgba(0,82,255,0.25);
+  --cyan:#00c8ff;--violet:#8b5cf6;--green:#10b981;--orange:#f97316;
+  --white:#fff;--gray:#8892a4;--gray2:#3d4a5c;
+  --card:#060d1e;--card2:#070e22;
+  --border:rgba(255,255,255,0.06);--border-blue:rgba(0,82,255,0.15);
+}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;display:flex;cursor:none;}
+#cur{position:fixed;width:8px;height:8px;background:var(--white);border-radius:50%;pointer-events:none;z-index:99999;transform:translate(-50%,-50%);}
+#cur2{position:fixed;width:32px;height:32px;border:1px solid rgba(0,100,255,0.5);border-radius:50%;pointer-events:none;z-index:99998;transform:translate(-50%,-50%);transition:all 0.15s ease;}
+.g-bc{background:linear-gradient(90deg,#60a5fa,#00c8ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.g-vi{background:linear-gradient(135deg,#818cf8,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.g-gr{background:linear-gradient(135deg,#10b981,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.g-pk{background:linear-gradient(135deg,#ec4899,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+
+/* ─── SIDEBAR ─── */
+.sidebar{width:240px;height:100vh;background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;left:0;top:0;z-index:50;overflow:hidden;}
+.sidebar::before{content:'';position:absolute;top:-100px;left:-100px;width:300px;height:300px;background:radial-gradient(circle,rgba(0,60,200,0.08),transparent 70%);pointer-events:none;}
+.sb-logo{padding:20px 20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;text-decoration:none;}
+.lbox{width:28px;height:28px;background:linear-gradient(135deg,var(--blue),var(--cyan));border-radius:7px;display:grid;place-items:center;font-size:13px;flex-shrink:0;}
+.logo-txt{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;background:linear-gradient(135deg,#fff,#a5c8ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.sb-profile{padding:16px 20px;border-bottom:1px solid var(--border);}
+.sb-av{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#0096ff,#00c8ff);display:grid;place-items:center;font-family:'Syne',sans-serif;font-weight:800;font-size:18px;margin-bottom:10px;box-shadow:0 0 20px rgba(0,200,255,0.3);}
+.sb-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:2px;}
+.sb-sub{font-size:11px;color:var(--gray);font-weight:300;margin-bottom:6px;}
+.sb-badge{display:inline-flex;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:600;background:rgba(0,200,255,0.1);color:var(--cyan);border:1px solid rgba(0,200,255,0.2);margin-bottom:8px;}
+.avail-row{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--gray);margin-bottom:8px;}
+.avail-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px rgba(16,185,129,0.6);animation:adot 2s ease-in-out infinite;}
+@keyframes adot{0%,100%{opacity:1;}50%{opacity:0.4;}}
+.sb-progress{font-size:11px;color:var(--gray);margin-bottom:5px;}
+.prog-bar{height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--blue),var(--cyan));animation:pf 1.5s cubic-bezier(0.16,1,0.3,1) both;}
+@keyframes pf{from{width:0;}to{width:var(--w);}}
+.sb-nav{flex:1;padding:12px 10px;overflow-y:auto;}
+.sb-nav::-webkit-scrollbar{display:none;}
+.nav-section{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gray2);padding:8px 10px 4px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:none;transition:all 0.2s;color:var(--gray);font-size:13px;font-weight:400;text-decoration:none;position:relative;margin-bottom:2px;}
+.nav-item:hover{background:rgba(255,255,255,0.04);color:var(--white);}
+.nav-item.active{background:rgba(0,82,255,0.1);color:var(--white);border:1px solid rgba(0,82,255,0.18);}
+.nav-item.active::before{content:'';position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:3px;height:60%;background:linear-gradient(180deg,var(--blue),var(--cyan));border-radius:0 2px 2px 0;}
+.nav-ico{font-size:15px;width:18px;text-align:center;}
+.nav-badge{margin-left:auto;background:var(--blue);color:var(--white);font-size:10px;font-weight:700;padding:1px 6px;border-radius:100px;min-width:18px;text-align:center;}
+.sb-ai{margin:10px;padding:12px 14px;background:linear-gradient(135deg,rgba(139,92,246,0.15),rgba(0,82,255,0.1));border:1px solid rgba(139,92,246,0.2);border-radius:12px;cursor:none;transition:all 0.2s;text-align:left;}
+.sb-ai:hover{border-color:rgba(139,92,246,0.4);box-shadow:0 0 20px rgba(139,92,246,0.15);}
+.sb-ai-top{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.sb-ai-ico{font-size:16px;}
+.sb-ai-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--white);}
+.sb-ai-sub{font-size:11px;color:var(--gray);font-weight:300;}
+
+/* ─── MAIN ─── */
+.main{margin-left:240px;flex:1;height:100vh;overflow-y:auto;background:var(--bg);}
+.main::-webkit-scrollbar{width:3px;}
+.main::-webkit-scrollbar-thumb{background:linear-gradient(var(--blue),var(--cyan));border-radius:2px;}
+.topbar{padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(0,4,15,0.9);backdrop-filter:blur(20px);z-index:40;}
+.topbar-left h2{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;}
+.topbar-left p{font-size:12px;color:var(--gray);font-weight:300;}
+.topbar-right{display:flex;align-items:center;gap:14px;}
+.notif-btn{width:34px;height:34px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;display:grid;place-items:center;cursor:none;font-size:15px;position:relative;transition:all 0.2s;}
+.notif-btn:hover{border-color:var(--border-blue);}
+.notif-dot{position:absolute;top:6px;right:6px;width:6px;height:6px;background:var(--blue);border-radius:50%;border:1px solid var(--bg);}
+.top-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#0096ff,#00c8ff);display:grid;place-items:center;font-family:'Syne',sans-serif;font-weight:800;font-size:13px;cursor:none;}
+.content{padding:24px 28px;}
+
+/* ─── STATS ─── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 20px;transition:all 0.3s;position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 80% 20%,var(--glow),transparent 60%);opacity:0.5;}
+.stat-card:hover{transform:translateY(-3px);border-color:var(--border-blue);}
+.sc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.sc-ico{font-size:20px;}
+.sc-trend{font-size:11px;font-weight:500;padding:2px 7px;border-radius:100px;}
+.trend-up{background:rgba(16,185,129,0.12);color:#34d399;}
+.trend-new{background:rgba(0,82,255,0.12);color:var(--blue2);}
+.trend-cy{background:rgba(0,200,255,0.1);color:var(--cyan);}
+.trend-pk{background:rgba(236,72,153,0.1);color:#ec4899;}
+.sc-num{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;line-height:1;margin-bottom:4px;}
+.sc-label{font-size:12px;color:var(--gray);font-weight:300;}
+
+/* ─── MAIN GRID: Radar + App Tracker ─── */
+.main-grid{display:grid;grid-template-columns:1fr 380px;gap:18px;margin-bottom:18px;}
+.dna-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;}
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.card-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;}
+.card-action{font-size:12px;color:var(--blue2);cursor:none;text-decoration:none;transition:color 0.2s;}
+.card-action:hover{color:var(--cyan);}
+.radar-wrap{height:260px;display:flex;align-items:center;justify-content:center;}
+.dna-legend{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;}
+.dl-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--gray);}
+.dl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.dl-val{margin-left:auto;font-weight:600;color:var(--white);}
+
+/* ─── TOP MATCHES CARD (right column) ─── */
+.top-matches-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;display:flex;flex-direction:column;}
+.match-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);transition:all 0.2s;cursor:none;}
+.match-item:last-child{border-bottom:none;}
+.match-item:hover{padding-left:4px;}
+.mi-logo{width:36px;height:36px;border-radius:8px;display:grid;place-items:center;font-size:13px;font-weight:800;font-family:'Syne',sans-serif;flex-shrink:0;}
+.mi-info{flex:1;}
+.mi-role{font-size:13px;font-weight:600;margin-bottom:2px;}
+.mi-company{font-size:11px;color:var(--gray);font-weight:300;}
+.score-ring{width:44px;height:44px;position:relative;display:grid;place-items:center;flex-shrink:0;}
+.score-ring svg{position:absolute;inset:0;transform:rotate(-90deg);}
+.score-ring-num{font-family:'Syne',sans-serif;font-size:11px;font-weight:800;position:relative;z-index:1;}
+
+/* ─── MATCHES DETAIL ROW ─── */
+.matches-row{margin-bottom:18px;}
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.section-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;}
+.section-link{font-size:12px;color:var(--blue2);text-decoration:none;cursor:none;transition:color 0.2s;}
+.section-link:hover{color:var(--cyan);}
+.cards-scroll{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.job-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;transition:all 0.3s;cursor:none;position:relative;overflow:hidden;}
+.job-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue),var(--cyan));transform:scaleX(0);transform-origin:left;transition:transform 0.4s;}
+.job-card:hover{border-color:var(--border-blue);transform:translateY(-4px);box-shadow:0 16px 40px rgba(0,0,20,0.4);}
+.job-card:hover::before{transform:scaleX(1);}
+.jc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;}
+.jc-logo{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-size:16px;font-weight:800;font-family:'Syne',sans-serif;}
+.jc-match{padding:4px 10px;border-radius:100px;font-size:12px;font-weight:700;font-family:'Syne',sans-serif;}
+.match-hi{background:rgba(16,185,129,0.12);color:#34d399;border:1px solid rgba(16,185,129,0.2);}
+.match-med{background:rgba(0,82,255,0.12);color:var(--blue2);border:1px solid rgba(0,82,255,0.2);}
+.jc-role{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:3px;}
+.jc-company{font-size:12px;color:var(--gray);margin-bottom:12px;font-weight:300;}
+.skill-bars{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
+.sb-row{display:flex;align-items:center;gap:8px;}
+.sb-name{font-size:11px;color:var(--gray);width:60px;}
+.sb-track{flex:1;height:4px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden;}
+.sb-fill{height:100%;border-radius:2px;}
+.sb-pct{font-size:11px;color:var(--gray);width:28px;text-align:right;}
+.learn-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.ltag{padding:3px 8px;border-radius:4px;font-size:10px;background:rgba(249,115,22,0.08);color:var(--orange);border:1px solid rgba(249,115,22,0.15);}
+.jc-btns{display:flex;gap:8px;}
+.jc-btn{flex:1;padding:7px;border-radius:7px;font-size:12px;font-weight:600;cursor:none;transition:all 0.25s;font-family:'DM Sans',sans-serif;border:none;text-align:center;}
+.jc-apply{background:var(--blue);color:var(--white);box-shadow:0 0 12px var(--blue-glow);}
+.jc-apply:hover{background:var(--blue2);}
+.jc-applied{background:rgba(16,185,129,0.12);color:#34d399;border:1px solid rgba(16,185,129,0.3);animation:apGlow 1.8s ease-in-out infinite;}
+@keyframes apGlow{0%,100%{box-shadow:0 0 10px rgba(16,185,129,0.25),0 0 24px rgba(16,185,129,0.08);}50%{box-shadow:0 0 22px rgba(16,185,129,0.5),0 0 48px rgba(16,185,129,0.2);}}
+.jc-detail{background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--gray);}
+.jc-detail:hover{color:var(--white);border-color:rgba(255,255,255,0.15);}
+
+/* ─── AI POPUP ─── */
+.ai-popup{position:fixed;bottom:28px;right:28px;z-index:200;}
+.ai-fab{width:52px;height:52px;background:linear-gradient(135deg,var(--violet),var(--blue));border-radius:50%;display:grid;place-items:center;cursor:none;font-size:22px;box-shadow:0 0 30px rgba(139,92,246,0.4);animation:fabPulse 2.5s ease-in-out infinite;transition:transform 0.2s;border:none;}
+@keyframes fabPulse{0%,100%{box-shadow:0 0 30px rgba(139,92,246,0.4);}50%{box-shadow:0 0 50px rgba(139,92,246,0.6),0 0 80px rgba(0,82,255,0.2);}}
+.ai-fab:hover{transform:scale(1.1);}
+.ai-chat{position:absolute;bottom:64px;right:0;width:300px;background:var(--card2);border:1px solid rgba(139,92,246,0.2);border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,20,0.5);display:none;}
+.ai-chat.open{display:block;animation:chatIn 0.3s cubic-bezier(0.16,1,0.3,1);}
+@keyframes chatIn{from{opacity:0;transform:translateY(20px) scale(0.95);}to{opacity:1;transform:none;}}
+.aic-header{padding:14px 16px;background:linear-gradient(135deg,rgba(139,92,246,0.15),rgba(0,82,255,0.1));border-bottom:1px solid rgba(139,92,246,0.15);display:flex;align-items:center;gap:10px;}
+.aic-av{width:32px;height:32px;background:linear-gradient(135deg,var(--violet),var(--blue));border-radius:50%;display:grid;place-items:center;font-size:14px;}
+.aic-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;}
+.aic-sub{font-size:11px;color:var(--gray);}
+.aic-msgs{padding:14px;height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;}
+.aic-msgs::-webkit-scrollbar{width:2px;}
+.aic-msgs::-webkit-scrollbar-thumb{background:var(--violet);}
+.msg{padding:8px 12px;border-radius:10px;font-size:12px;line-height:1.6;max-width:85%;}
+.msg-ai{background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.15);color:rgba(255,255,255,0.85);align-self:flex-start;}
+.msg-user{background:var(--blue);color:var(--white);align-self:flex-end;}
+.aic-input{padding:10px;border-top:1px solid var(--border);display:flex;gap:8px;}
+.aic-inp{flex:1;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--white);font-size:12px;font-family:'DM Sans',sans-serif;outline:none;}
+.aic-inp:focus{border-color:rgba(139,92,246,0.4);}
+.aic-send{width:30px;height:30px;background:var(--violet);border-radius:7px;display:grid;place-items:center;cursor:none;font-size:13px;transition:background 0.2s;border:none;}
+.aic-send:hover{background:var(--blue);}
+
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:linear-gradient(var(--blue),var(--cyan));border-radius:2px;}
+</style>
+</head>
+<body>
+<div id="cur"></div><div id="cur2"></div>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <a href="index.html" class="sb-logo"><div class="lbox">🧬</div><span class="logo-txt">SkillLens</span></a>
+  <div class="sb-profile">
+    <div class="sb-av">PS</div>
+    <div class="sb-name">Priya Shankar</div>
+    <div class="sb-sub">Full Stack Developer · 3 yrs exp</div>
+    <div class="sb-badge">Job Seeker</div>
+    <div class="avail-row"><div class="avail-dot"></div>Available for work</div>
+    <div class="sb-progress">Profile Completeness — 82%</div>
+    <div class="prog-bar"><div class="prog-fill" style="--w:82%;"></div></div>
+  </div>
+  <nav class="sb-nav">
+    <div class="nav-section">Main</div>
+    <a href="/jobseeker" class="nav-item active"><span class="nav-ico">🏠</span>Dashboard</a>
+    <a href="#" class="nav-item"><span class="nav-ico">📋</span>Applications<span class="nav-badge">7</span></a>
+    <div class="nav-section">Profile</div>
+    <a href="/profile" class="nav-item"><span class="nav-ico">👤</span>Edit Profile</a>
+    <a href="/skilldna" class="nav-item"><span class="nav-ico">🧬</span>Skill DNA & Matches</a>
+    <a href="#" class="nav-item"><span class="nav-ico">📄</span>Resume</a>
+    <div class="nav-section">Insights</div>
+    <a href="#" class="nav-item"><span class="nav-ico">📊</span>Skill Gap Report</a>
+    <a href="#" class="nav-item"><span class="nav-ico">💡</span>Learning Path</a>
+    <a href="#" class="nav-item"><span class="nav-ico">💰</span>Salary Insights</a>
+    <div class="nav-section">Account</div>
+    <a href="auth.html" class="nav-item"><span class="nav-ico">🚪</span>Logout</a>
+  </nav>
+  <button class="sb-ai" onclick="toggleAI()">
+    <div class="sb-ai-top"><span class="sb-ai-ico">🤖</span><span class="sb-ai-title">AI Assistant</span></div>
+    <div class="sb-ai-sub">Ask anything about your matches</div>
+  </button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h2>Welcome back, <span class="g-bc">Priya</span> 👋</h2>
+      <p>5 companies viewed your profile in the last 7 days</p>
+    </div>
+    <div class="topbar-right">
+      <div class="notif-btn">🔔<div class="notif-dot"></div></div>
+      <div class="top-av">PS</div>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card" style="--glow:rgba(0,82,255,0.15);">
+        <div class="sc-top"><span class="sc-ico">🎯</span><span class="sc-trend trend-cy">Top</span></div>
+        <div class="sc-num g-bc">94%</div>
+        <div class="sc-label">Best Match Score</div>
+      </div>
+      <div class="stat-card" style="--glow:rgba(139,92,246,0.1);">
+        <div class="sc-top"><span class="sc-ico">📋</span><span class="sc-trend trend-new">Active</span></div>
+        <div class="sc-num g-vi">7</div>
+        <div class="sc-label">Applications Live</div>
+      </div>
+      <div class="stat-card" style="--glow:rgba(16,185,129,0.1);">
+        <div class="sc-top"><span class="sc-ico">🗓️</span><span class="sc-trend trend-up">This week</span></div>
+        <div class="sc-num g-gr">3</div>
+        <div class="sc-label">Interviews Scheduled</div>
+      </div>
+      <div class="stat-card" style="--glow:rgba(236,72,153,0.08);">
+        <div class="sc-top"><span class="sc-ico">👁️</span><span class="sc-trend trend-pk">+5</span></div>
+        <div class="sc-num g-pk">18</div>
+        <div class="sc-label">Profile Views</div>
+      </div>
+    </div>
+
+    <!-- MAIN GRID: DNA Radar + Top Matches -->
+    <div class="main-grid">
+      <!-- SKILL DNA -->
+      <div class="dna-card">
+        <div class="card-header">
+          <div class="card-title">🧬 Your <span class="g-bc">Skill DNA</span></div>
+          <a href="/skilldna" class="card-action">View Full Analysis →</a>
+        </div>
+        <div class="radar-wrap">
+          <canvas id="radarChart" width="260" height="260"></canvas>
+        </div>
+        <div class="dna-legend">
+          <div class="dl-item"><div class="dl-dot" style="background:#60a5fa;"></div>React/Next<span class="dl-val">88%</span></div>
+          <div class="dl-item"><div class="dl-dot" style="background:#00c8ff;"></div>Node.js<span class="dl-val">75%</span></div>
+          <div class="dl-item"><div class="dl-dot" style="background:#8b5cf6;"></div>TypeScript<span class="dl-val">62%</span></div>
+          <div class="dl-item"><div class="dl-dot" style="background:#10b981;"></div>SQL/DB<span class="dl-val">70%</span></div>
+          <div class="dl-item"><div class="dl-dot" style="background:#f97316;"></div>Docker<span class="dl-val">38%</span></div>
+          <div class="dl-item"><div class="dl-dot" style="background:#fbbf24;"></div>Sys Design<span class="dl-val">45%</span></div>
+        </div>
+      </div>
+
+      <!-- TOP MATCHES -->
+      <div class="top-matches-card">
+        <div class="card-header">
+          <div class="card-title">🎯 Top Matches</div>
+          <a href="skilldna_matches.html" class="card-action">View All →</a>
+        </div>
+        <div class="match-item">
+          <div class="mi-logo" style="background:linear-gradient(135deg,#0052ff,#4d8eff);">TC</div>
+          <div class="mi-info"><div class="mi-role">Senior Full Stack Dev</div><div class="mi-company">TechCorp • Remote</div></div>
+          <div class="score-ring">
+            <svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="18" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="3"/><circle cx="22" cy="22" r="18" fill="none" stroke="url(#g1)" stroke-width="3" stroke-dasharray="94 113" stroke-linecap="round"/><defs><linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#0052ff"/><stop offset="100%" stop-color="#00c8ff"/></linearGradient></defs></svg>
+            <span class="score-ring-num g-bc">94%</span>
+          </div>
+        </div>
+        <div class="match-item">
+          <div class="mi-logo" style="background:linear-gradient(135deg,#7c3aed,#a78bfa);">ZM</div>
+          <div class="mi-info"><div class="mi-role">React Frontend Eng.</div><div class="mi-company">Zenius Media • Hybrid</div></div>
+          <div class="score-ring">
+            <svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="18" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="3"/><circle cx="22" cy="22" r="18" fill="none" stroke="url(#g2)" stroke-width="3" stroke-dasharray="87 113" stroke-linecap="round"/><defs><linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#a78bfa"/></linearGradient></defs></svg>
+            <span class="score-ring-num g-vi">87%</span>
+          </div>
+        </div>
+        <div class="match-item">
+          <div class="mi-logo" style="background:linear-gradient(135deg,#059669,#34d399);">NS</div>
+          <div class="mi-info"><div class="mi-role">Full Stack Engineer</div><div class="mi-company">NovaSoft • Chennai</div></div>
+          <div class="score-ring">
+            <svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="18" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="3"/><circle cx="22" cy="22" r="18" fill="none" stroke="url(#g3)" stroke-width="3" stroke-dasharray="82 113" stroke-linecap="round"/><defs><linearGradient id="g3" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#059669"/><stop offset="100%" stop-color="#34d399"/></linearGradient></defs></svg>
+            <span class="score-ring-num g-gr">82%</span>
+          </div>
+        </div>
+        <div class="match-item">
+          <div class="mi-logo" style="background:linear-gradient(135deg,#0096ff,#00c8ff);">FP</div>
+          <div class="mi-info"><div class="mi-role">Backend Node.js Dev</div><div class="mi-company">FinPay • Remote</div></div>
+          <div class="score-ring">
+            <svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="18" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="3"/><circle cx="22" cy="22" r="18" fill="none" stroke="url(#g4)" stroke-width="3" stroke-dasharray="79 113" stroke-linecap="round"/><defs><linearGradient id="g4" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#0096ff"/><stop offset="100%" stop-color="#00c8ff"/></linearGradient></defs></svg>
+            <span class="score-ring-num" style="background:linear-gradient(90deg,#60a5fa,#00c8ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">79%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MY MATCHES DETAILED -->
+    <div class="matches-row">
+      <div class="section-header">
+        <div class="section-title">📋 My <span class="g-bc">Matches</span> — Detailed View</div>
+        <a href="/skilldna" class="section-link">View all 18 →</a>
+      </div>
+      <div class="cards-scroll">
+        <div class="job-card">
+          <div class="jc-top"><div class="jc-logo" style="background:linear-gradient(135deg,#0052ff,#4d8eff);">TC</div><div class="jc-match match-hi">94% Match</div></div>
+          <div class="jc-role">Senior Full Stack Developer</div>
+          <div class="jc-company">TechCorp • Remote • Full-time</div>
+          <div class="skill-bars">
+            <div class="sb-row"><span class="sb-name">React</span><div class="sb-track"><div class="sb-fill" style="width:88%;background:linear-gradient(90deg,#0052ff,#4d8eff);"></div></div><span class="sb-pct">88%</span></div>
+            <div class="sb-row"><span class="sb-name">Node.js</span><div class="sb-track"><div class="sb-fill" style="width:75%;background:linear-gradient(90deg,#10b981,#34d399);"></div></div><span class="sb-pct">75%</span></div>
+            <div class="sb-row"><span class="sb-name">AWS</span><div class="sb-track"><div class="sb-fill" style="width:55%;background:linear-gradient(90deg,#f97316,#fbbf24);"></div></div><span class="sb-pct">55%</span></div>
+          </div>
+          <div style="font-size:11px;color:var(--gray);margin-bottom:6px;font-weight:300;">Skills to improve:</div>
+          <div class="learn-tags"><span class="ltag">Docker</span><span class="ltag">System Design</span></div>
+          <div class="jc-btns"><button class="jc-btn jc-apply" onclick="applyJob(this)">Apply Now</button><button class="jc-btn jc-detail" onclick="location.href='skilldna_matches.html'">Details</button></div>
+        </div>
+        <div class="job-card">
+          <div class="jc-top"><div class="jc-logo" style="background:linear-gradient(135deg,#7c3aed,#a78bfa);">ZM</div><div class="jc-match match-hi">87% Match</div></div>
+          <div class="jc-role">React Frontend Engineer</div>
+          <div class="jc-company">Zenius Media • Hybrid • Full-time</div>
+          <div class="skill-bars">
+            <div class="sb-row"><span class="sb-name">React</span><div class="sb-track"><div class="sb-fill" style="width:88%;background:linear-gradient(90deg,#00c8ff,#0096ff);"></div></div><span class="sb-pct">88%</span></div>
+            <div class="sb-row"><span class="sb-name">TypeScript</span><div class="sb-track"><div class="sb-fill" style="width:62%;background:linear-gradient(90deg,#8b5cf6,#a78bfa);"></div></div><span class="sb-pct">62%</span></div>
+            <div class="sb-row"><span class="sb-name">Next.js</span><div class="sb-track"><div class="sb-fill" style="width:70%;background:linear-gradient(90deg,#0052ff,#60a5fa);"></div></div><span class="sb-pct">70%</span></div>
+          </div>
+          <div style="font-size:11px;color:var(--gray);margin-bottom:6px;font-weight:300;">Skills to improve:</div>
+          <div class="learn-tags"><span class="ltag">GraphQL</span><span class="ltag">Storybook</span></div>
+          <div class="jc-btns"><button class="jc-btn jc-apply" onclick="applyJob(this)">Apply Now</button><button class="jc-btn jc-detail" onclick="location.href='skilldna_matches.html'">Details</button></div>
+        </div>
+        <div class="job-card">
+          <div class="jc-top"><div class="jc-logo" style="background:linear-gradient(135deg,#059669,#34d399);">FP</div><div class="jc-match match-med">79% Match</div></div>
+          <div class="jc-role">Backend Node.js Developer</div>
+          <div class="jc-company">FinPay • Remote • Full-time</div>
+          <div class="skill-bars">
+            <div class="sb-row"><span class="sb-name">Node.js</span><div class="sb-track"><div class="sb-fill" style="width:75%;background:linear-gradient(90deg,#10b981,#34d399);"></div></div><span class="sb-pct">75%</span></div>
+            <div class="sb-row"><span class="sb-name">SQL</span><div class="sb-track"><div class="sb-fill" style="width:70%;background:linear-gradient(90deg,#8b5cf6,#a78bfa);"></div></div><span class="sb-pct">70%</span></div>
+            <div class="sb-row"><span class="sb-name">Redis</span><div class="sb-track"><div class="sb-fill" style="width:40%;background:linear-gradient(90deg,#f97316,#fbbf24);"></div></div><span class="sb-pct">40%</span></div>
+          </div>
+          <div style="font-size:11px;color:var(--gray);margin-bottom:6px;font-weight:300;">Skills to improve:</div>
+          <div class="learn-tags"><span class="ltag">Redis</span><span class="ltag">Kafka</span></div>
+          <div class="jc-btns"><button class="jc-btn jc-apply" onclick="applyJob(this)">Apply Now</button><button class="jc-btn jc-detail" onclick="location.href='skilldna_matches.html'">Details</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AI POPUP -->
+<div class="ai-popup">
+  <div class="ai-chat" id="aiChat">
+    <div class="aic-header"><div class="aic-av">🤖</div><div><div class="aic-title">SkillLens AI</div><div class="aic-sub">Powered by your Skill DNA</div></div></div>
+    <div class="aic-msgs" id="aicMsgs">
+      <div class="msg msg-ai">Hi Priya! 👋 You have a 94% match with TechCorp. Want me to explain why or help you prepare?</div>
+    </div>
+    <div class="aic-input">
+      <input class="aic-inp" id="aicInp" placeholder="Ask about your matches..." onkeydown="if(event.key==='Enter')sendMsg()"/>
+      <button class="aic-send" onclick="sendMsg()">→</button>
+    </div>
+  </div>
+  <button class="ai-fab" onclick="toggleAI()">🤖</button>
+</div>
+
+<script>
+const cur=document.getElementById('cur'),cur2=document.getElementById('cur2');
+let mx=innerWidth/2,my=innerHeight/2,tx=mx,ty=my;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px';});
+setInterval(()=>{tx+=(mx-tx)*0.13;ty+=(my-ty)*0.13;cur2.style.left=tx+'px';cur2.style.top=ty+'px';},16);
+
+new Chart(document.getElementById('radarChart').getContext('2d'),{
+  type:'radar',
+  data:{
+    labels:['React/Next','Node.js','TypeScript','SQL/DB','Docker','Sys Design'],
+    datasets:[{
+      data:[88,75,62,70,38,45],
+      backgroundColor:'rgba(0,82,255,0.15)',
+      borderColor:'rgba(0,200,255,0.8)',
+      borderWidth:2,
+      pointBackgroundColor:'#00c8ff',
+      pointBorderColor:'#fff',
+      pointBorderWidth:1.5,
+      pointRadius:4,
+      pointHoverRadius:6
+    }]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:true,
+    plugins:{legend:{display:false}},
+    scales:{r:{beginAtZero:true,max:100,ticks:{display:false},grid:{color:'rgba(255,255,255,0.06)'},angleLines:{color:'rgba(255,255,255,0.06)'},pointLabels:{color:'rgba(255,255,255,0.6)',font:{size:11,family:'DM Sans'}}}}
+  }
+});
+
+function applyJob(btn){
+  if(btn.classList.contains('jc-applied'))return;
+  btn.textContent='✓ Applied!';
+  btn.classList.remove('jc-apply');
+  btn.classList.add('jc-applied');
+}
+
+function toggleAI(){document.getElementById('aiChat').classList.toggle('open');}
+const aiReplies=[
+  "Your React score (88%) is the core reason TechCorp is a 94% match — they need senior React depth.",
+  "Improving Docker from 38%→60% would unlock 6 more senior roles including one at ₹18 LPA.",
+  "3 interviews this week — focus your prep on TechCorp's System Design round.",
+  "System Design is the common gap across your top matches. Try 'Grokking System Design'.",
+  "Based on your current skills, your market value is ₹10–16 LPA. Closing TypeScript gap pushes it higher.",
+];
+let aiIdx=0;
+function sendMsg(){
+  const inp=document.getElementById('aicInp'),msgs=document.getElementById('aicMsgs'),txt=inp.value.trim();
+  if(!txt)return;
+  msgs.innerHTML+=`<div class="msg msg-user">${txt}</div>`;
+  inp.value='';
+  setTimeout(()=>{msgs.innerHTML+=`<div class="msg msg-ai">${aiReplies[aiIdx++%aiReplies.length]}</div>`;msgs.scrollTop=msgs.scrollHeight;},600);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+</script>
+</body>
+</html>
